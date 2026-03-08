@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>SkillMap Pro — Skill Gap Analysis</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#f1f5f9;--surface:#fff;--border:#e2e8f0;
+  --text:#0f172a;--muted:#64748b;--subtle:#94a3b8;
+  --accent:#1d4ed8;--accent-light:#eff6ff;--header:#0f172a;
+}
+body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+
+/* ── TOP BAR ── */
+#topbar{background:var(--header);border-bottom:1px solid #1e293b;}
+#topbar-inner{max-width:1140px;margin:0 auto;padding:0 16px;display:flex;align-items:center;justify-content:space-between;height:56px;}
+#brand{display:flex;align-items:center;gap:10px;}
+#brand-icon{width:32px;height:32px;background:#1d4ed8;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+#brand-name{font-size:15px;font-weight:700;color:#fff;}
+#brand-sub{font-size:10px;color:#64748b;text-transform:uppercase;letter-spacing:.05em;margin-top:1px;}
+#kpis{display:flex;gap:20px;}
+.kpi{text-align:right;}
+.kpi-val{font-size:16px;font-weight:700;color:#fff;line-height:1;}
+.kpi-label{font-size:10px;color:#64748b;margin-top:2px;}
+
+/* ── TABS ── */
+#tabbar{background:#fff;border-bottom:1px solid var(--border);overflow-x:auto;-webkit-overflow-scrolling:touch;}
+#tabbar::-webkit-scrollbar{display:none;}
+#tabbar-inner{max-width:1140px;margin:0 auto;padding:0 12px;display:flex;min-width:max-content;}
+.tab-btn{padding:10px 18px;font-size:13px;font-weight:600;font-family:inherit;border:none;cursor:pointer;background:transparent;color:var(--muted);border-bottom:2px solid transparent;transition:all .15s;white-space:nowrap;}
+.tab-btn.active{color:var(--accent);border-bottom-color:var(--accent);}
+
+/* ── BODY ── */
+#body{max-width:1140px;margin:0 auto;padding:20px 12px;}
+
+/* ── CARDS ── */
+.card{background:#fff;border:1px solid var(--border);border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,.06);}
+
+/* ── SECTION HEAD ── */
+.section-head{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:16px;flex-wrap:wrap;gap:10px;}
+.section-title{font-size:18px;font-weight:700;}
+.section-sub{font-size:12px;color:var(--muted);margin-top:3px;}
+
+/* ── ADD BTN ── */
+#add-btn{background:var(--accent);color:#fff;border:none;border-radius:6px;padding:9px 16px;cursor:pointer;font-size:13px;font-weight:600;font-family:inherit;touch-action:manipulation;}
+
+/* ── TABLE HEAD (desktop) ── */
+#table-head{display:grid;grid-template-columns:2.2fr 1.4fr 1.4fr 2.2fr 36px;padding:10px 16px;background:#f8fafc;border-bottom:1px solid var(--border);}
+.th{font-size:10px;font-weight:700;color:var(--subtle);text-transform:uppercase;letter-spacing:.08em;}
+
+/* ── ROW ── */
+.row-wrap{border-bottom:1px solid var(--border);}
+.row-wrap:last-child{border-bottom:none;}
+/* Desktop grid */
+.row-grid{display:grid;grid-template-columns:2.2fr 1.4fr 1.4fr 2.2fr 36px;padding:12px 16px;align-items:start;background:#fff;gap:0;}
+.row-grid.expanded-bg{background:#fafbff;}
+
+/* ── SELECTS ── */
+select{width:100%;padding:8px 10px;border-radius:5px;border:1px solid var(--border);font-size:13px;font-family:inherit;color:var(--subtle);background:#fff;outline:none;cursor:pointer;-webkit-appearance:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2394a3b8' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:30px;}
+select.has-value{color:var(--text);font-weight:500;}
+select:focus{border-color:#2563eb;box-shadow:0 0 0 2px rgba(37,99,235,.12);}
+optgroup{font-weight:600;}
+.cat-label{font-size:10px;color:var(--subtle);margin-top:4px;padding-left:2px;}
+.mini-bars{display:flex;gap:3px;margin-top:6px;}
+.mini-bar{flex:1;height:3px;border-radius:2px;background:#e2e8f0;}
+.col-cur{padding-right:10px;}
+.col-fut{padding-right:10px;}
+
+/* ── GAP CELL ── */
+.badge{display:inline-block;padding:3px 8px;border-radius:4px;font-size:11px;font-weight:700;letter-spacing:.02em;}
+.gap-action-text{font-size:11px;color:var(--muted);margin-top:4px;line-height:1.4;}
+.gap-cell-inner{display:flex;flex-direction:column;gap:6px;}
+.ai-plan-btn{align-self:flex-start;background:var(--accent-light);border:1px solid #bfdbfe;border-radius:5px;padding:5px 10px;font-size:11px;font-weight:700;color:var(--accent);cursor:pointer;font-family:inherit;touch-action:manipulation;}
+.del-btn{background:none;border:none;cursor:pointer;color:#cbd5e1;font-size:18px;padding:4px;border-radius:4px;line-height:1;touch-action:manipulation;}
+.del-btn:hover{color:#ef4444;}
+
+/* ── AI PANEL ── */
+.ai-panel{padding:16px;background:#f8faff;border-top:1px solid #dbeafe;display:none;}
+.ai-panel.open{display:block;}
+.ai-panel-label{font-size:10px;font-weight:700;color:var(--accent);margin-bottom:8px;text-transform:uppercase;letter-spacing:.07em;}
+.ai-panel-text{font-size:12px;color:#334155;line-height:1.75;white-space:pre-wrap;}
+
+/* ── LEGEND ── */
+#legend{margin-top:12px;display:flex;gap:14px;align-items:center;padding:8px 14px;background:#fff;border-radius:6px;border:1px solid var(--border);flex-wrap:wrap;}
+.legend-title{font-size:10px;font-weight:700;color:var(--subtle);text-transform:uppercase;letter-spacing:.06em;}
+.legend-item{font-size:11px;color:var(--muted);}
+.legend-item strong{color:var(--text);}
+
+/* ── RADAR ── */
+#radar-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start;}
+.card-head{margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid var(--border);}
+.card-head h3{font-size:15px;font-weight:700;margin:0;}
+.card-head p{font-size:12px;color:var(--muted);margin-top:3px;}
+.radar-legend{display:flex;gap:16px;justify-content:center;margin-top:14px;padding-top:12px;border-top:1px solid var(--border);}
+.radar-legend-item{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);}
+.radar-legend-dot{width:20px;height:2.5px;border-radius:2px;}
+#gap-bars-container{display:flex;flex-direction:column;gap:16px;}
+.gap-bar-row{margin-bottom:12px;}
+.gap-bar-row:last-child{margin-bottom:0;}
+.gap-bar-top{display:flex;justify-content:space-between;margin-bottom:4px;}
+.gap-bar-name{font-size:12px;font-weight:600;}
+.gap-bar-delta{font-size:11px;font-weight:700;padding:1px 6px;border-radius:3px;}
+.gap-bar-track{height:6px;background:#f1f5f9;border-radius:4px;overflow:hidden;position:relative;}
+.gap-bar-cur{position:absolute;left:0;top:0;height:100%;background:#059669;}
+.gap-bar-gap{position:absolute;top:0;height:100%;opacity:.45;}
+.gap-bar-labels{display:flex;justify-content:space-between;margin-top:3px;font-size:10px;color:var(--subtle);}
+.priority-card{border-left:4px solid #1d4ed8;}
+.priority-label{font-size:10px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.07em;margin-bottom:5px;}
+.priority-skill{font-size:16px;font-weight:800;margin-bottom:3px;}
+.priority-desc{font-size:12px;color:var(--muted);}
+#radar-placeholder{display:flex;align-items:center;justify-content:center;height:240px;color:var(--subtle);font-size:12px;text-align:center;line-height:1.6;}
+
+/* ── GAP ANALYSIS ── */
+#gaps-list{display:flex;flex-direction:column;gap:12px;}
+.gap-item{overflow:hidden;}
+.gap-item-head{display:grid;grid-template-columns:32px 1fr auto;padding:14px 16px;align-items:start;border-bottom:1px solid var(--border);gap:12px;}
+.gap-rank{font-size:12px;font-weight:700;color:var(--subtle);padding-top:2px;}
+.gap-skill-name{font-size:14px;font-weight:700;}
+.gap-skill-cat{font-size:10px;color:var(--subtle);margin-top:2px;}
+.gap-stats-row{display:flex;gap:16px;margin-top:8px;}
+.gap-stat{text-align:center;}
+.gap-stat-label{font-size:9px;color:var(--subtle);margin-bottom:2px;text-transform:uppercase;letter-spacing:.05em;}
+.gap-stat-val{font-size:16px;font-weight:800;}
+.gap-stat-sub{font-size:10px;color:var(--muted);}
+.gap-progress-wrap{padding:0 16px;}
+.gap-progress-track{height:5px;background:#f1f5f9;margin:12px 0 8px;border-radius:3px;overflow:hidden;}
+.gap-progress-fill{height:100%;border-radius:3px;}
+.gap-actions-wrap{padding:0 16px 16px;display:flex;flex-direction:column;gap:6px;}
+.gap-action-item{display:flex;align-items:flex-start;gap:8px;padding:8px 12px;background:#f8fafc;border:1px solid var(--border);border-radius:6px;font-size:12px;color:#334155;}
+.gap-action-num{font-weight:700;font-size:12px;line-height:1.5;flex-shrink:0;}
+.empty-state{padding:50px 20px;text-align:center;}
+.empty-icon{font-size:32px;margin-bottom:10px;}
+.empty-text{color:var(--subtle);font-size:13px;}
+
+/* ── MOBILE CARD LAYOUT FOR ROWS ── */
+@media(max-width:680px){
+  #table-head{display:none;}
+  .row-grid{
+    display:flex;flex-direction:column;gap:10px;padding:14px 14px 12px;
+  }
+  .col-cur,.col-fut{padding-right:0;}
+  select{font-size:16px;} /* prevents iOS zoom */
+  .gap-cell-inner{flex-direction:column;}
+  .del-btn{align-self:flex-end;position:absolute;top:10px;right:10px;}
+  .row-wrap{position:relative;}
+  .row-grid .del-col{position:absolute;top:10px;right:10px;}
+
+  /* label the fields */
+  .row-grid .col-skill::before{content:"SKILL";display:block;font-size:10px;font-weight:700;color:var(--subtle);letter-spacing:.07em;margin-bottom:4px;}
+  .row-grid .col-cur::before{content:"CURRENT LEVEL";display:block;font-size:10px;font-weight:700;color:var(--subtle);letter-spacing:.07em;margin-bottom:4px;}
+  .row-grid .col-fut::before{content:"TARGET LEVEL";display:block;font-size:10px;font-weight:700;color:var(--subtle);letter-spacing:.07em;margin-bottom:4px;}
+  .row-grid .col-gap::before{content:"GAP ASSESSMENT";display:block;font-size:10px;font-weight:700;color:var(--subtle);letter-spacing:.07em;margin-bottom:4px;}
+
+  #radar-grid{grid-template-columns:1fr;}
+  #kpis{display:none;}
+  .gap-item-head{grid-template-columns:28px 1fr;}
+  .gap-item-badge{grid-column:2;margin-top:4px;}
+  #body{padding:14px 10px;}
+  .section-title{font-size:16px;}
+  #legend{gap:8px;}
+}
+
+@media(max-width:400px){
+  .tab-btn{padding:10px 12px;font-size:12px;}
+  #brand-name{font-size:14px;}
+}
+</style>
+</head>
+<body>
+
+<div id="topbar">
+  <div id="topbar-inner">
+    <div id="brand">
+      <div id="brand-icon">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      </div>
+      <div>
+        <div id="brand-name">SkillMap Pro</div>
+        <div id="brand-sub">Skill Gap Analysis</div>
+      </div>
+    </div>
+    <div id="kpis"></div>
+  </div>
+</div>
+
+<div id="tabbar">
+  <div id="tabbar-inner">
+    <button class="tab-btn active" data-tab="tracker">Skill Tracker</button>
+    <button class="tab-btn" data-tab="radar">Radar Chart</button>
+    <button class="tab-btn" data-tab="gaps">Gap Analysis</button>
+  </div>
+</div>
+
+<div id="body">
+  <!-- TRACKER -->
+  <div id="tab-tracker">
+    <div class="section-head">
+      <div>
+        <div class="section-title">Skill Inventory</div>
+        <div class="section-sub">Set your current level and target for each skill</div>
+      </div>
+      <button id="add-btn">+ Add Skill</button>
+    </div>
+    <div class="card" id="skill-table">
+      <div id="table-head">
+        <div class="th">Skill</div>
+        <div class="th">Current Level</div>
+        <div class="th">Target Level</div>
+        <div class="th">Gap Assessment</div>
+        <div class="th"></div>
+      </div>
+      <div id="rows-container"></div>
+    </div>
+    <div id="legend">
+      <span class="legend-title">Scale</span>
+      <span class="legend-item"><strong>1</strong> Novice</span>
+      <span class="legend-item"><strong>2</strong> Beginner</span>
+      <span class="legend-item"><strong>3</strong> Developing</span>
+      <span class="legend-item"><strong>4</strong> Proficient</span>
+      <span class="legend-item"><strong>5</strong> Expert</span>
+    </div>
+  </div>
+
+  <!-- RADAR -->
+  <div id="tab-radar" style="display:none;">
+    <div id="radar-grid">
+      <div class="card" style="padding:20px;">
+        <div class="card-head"><h3>Competency Radar</h3><p>Current vs. target proficiency overlay</p></div>
+        <div id="radar-svg-wrap"></div>
+        <div class="radar-legend">
+          <div class="radar-legend-item"><div class="radar-legend-dot" style="background:#059669;"></div>Current</div>
+          <div class="radar-legend-item"><div class="radar-legend-dot" style="background:#2563eb;"></div>Target</div>
+        </div>
+      </div>
+      <div id="gap-bars-container">
+        <div class="card" style="padding:20px;">
+          <div class="card-head"><h3>Gap Summary</h3><p>Distance to target levels</p></div>
+          <div id="gap-bars-list"></div>
+        </div>
+        <div id="priority-card-wrap"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- GAPS -->
+  <div id="tab-gaps" style="display:none;">
+    <div style="margin-bottom:16px;">
+      <div class="section-title">Gap Analysis Report</div>
+      <div class="section-sub">Ranked by severity — prioritise from top to bottom</div>
+    </div>
+    <div id="gaps-list"></div>
+  </div>
+</div>
+
+<script>
+const SKILL_CATEGORIES={
+  "Technology":["Python","JavaScript","TypeScript","React","Node.js","SQL","Machine Learning","Data Analysis","Cloud Computing (AWS)","Cloud Computing (Azure)","DevOps / CI-CD","Cybersecurity","API Design","Docker / Kubernetes","Data Engineering"],
+  "Data & Analytics":["Power BI","Tableau","Excel (Advanced)","Statistics","Data Storytelling","Business Intelligence","Data Governance","A/B Testing","Predictive Modeling"],
+  "Leadership & Strategy":["Strategic Thinking","Change Management","Executive Presence","Decision Making","Stakeholder Management","Conflict Resolution","Coaching & Mentoring","Vision Setting"],
+  "Soft Skills":["Communication","Presentation Skills","Negotiation","Emotional Intelligence","Active Listening","Cross-cultural Collaboration","Facilitation","Storytelling"],
+  "Project & Product":["Project Management","Agile / Scrum","Product Strategy","OKR Setting","Risk Management","Roadmap Planning","Stakeholder Communication","Design Thinking"],
+  "Business & Finance":["Financial Analysis","Budget Management","Business Development","Sales Strategy","Marketing Analytics","Customer Experience","P&L Management","Pricing Strategy"],
+};
+const LEVELS=["","Novice","Beginner","Developing","Proficient","Expert"];
+const GAP_META={
+  0:{label:"On Target",color:"#059669",bg:"#ecfdf5",border:"#a7f3d0",badge:"#d1fae5"},
+  1:{label:"Minor Gap",color:"#0284c7",bg:"#f0f9ff",border:"#bae6fd",badge:"#e0f2fe"},
+  2:{label:"Moderate Gap",color:"#d97706",bg:"#fffbeb",border:"#fcd34d",badge:"#fef3c7"},
+  3:{label:"Significant Gap",color:"#ea580c",bg:"#fff7ed",border:"#fdba74",badge:"#ffedd5"},
+  4:{label:"Critical Gap",color:"#dc2626",bg:"#fef2f2",border:"#fca5a5",badge:"#fee2e2"},
+};
+const ACTIONS={
+  0:["Sustain excellence through knowledge sharing","Mentor colleagues in this area","Pursue mastery-level certifications"],
+  1:["Dedicate 1–2 hours weekly to structured practice","Read one authoritative book on this topic","Apply skill in a live project this quarter"],
+  2:["Enroll in an intermediate online course (Coursera, edX)","Find an accountability partner or coach","Set a 60-day measurable milestone"],
+  3:["Commit to a structured 3-month learning path","Request stretch assignments to build experience","Join a professional community of practice"],
+  4:["Prioritize as primary development objective","Consider formal training, bootcamp, or certification","Block dedicated weekly time — minimum 5 hours"],
+};
+function gapMeta(c,f){const g=Math.max(0,f-c);return{...GAP_META[Math.min(g,4)],gap:g};}
+function uid(){return Math.random().toString(36).slice(2);}
+function makeRow(){return{id:uid(),skill:"",category:"",current:0,future:0};}
+
+let rows=[makeRow(),makeRow(),makeRow()];
+let aiText={},aiLoading={},expandedId=null,currentTab="tracker";
+
+function skillOpts(){
+  let h='<option value="">Select a skill…</option>';
+  for(const[cat,skills]of Object.entries(SKILL_CATEGORIES)){
+    h+=`<optgroup label="${cat}">`;
+    skills.forEach(s=>{h+=`<option value="${s}">${s}</option>`;});
+    h+='</optgroup>';
+  }
+  return h;
+}
+function lvlOpts(ph){
+  let h=`<option value="0">${ph}</option>`;
+  for(let l=1;l<=5;l++)h+=`<option value="${l}">${l} · ${LEVELS[l]}</option>`;
+  return h;
+}
+function miniBars(n,color){
+  return Array.from({length:5},(_,i)=>`<div class="mini-bar" style="background:${i<n?color:'#e2e8f0'};"></div>`).join('');
+}
+
+function renderRow(row){
+  const meta=row.skill&&row.current&&row.future?gapMeta(row.current,row.future):null;
+  const isExp=expandedId===row.id;
+  const cat=Object.entries(SKILL_CATEGORIES).find(([,s])=>s.includes(row.skill));
+  const catName=cat?cat[0]:row.category;
+
+  let gapHTML='<span style="font-size:12px;color:#cbd5e1;">—</span>';
+  if(meta){
+    const act=ACTIONS[Math.min(meta.gap,4)][0];
+    gapHTML=`<div class="gap-cell-inner">
+      <span class="badge" style="background:${meta.badge};color:${meta.color};border:1px solid ${meta.border};">${meta.label}</span>
+      <div class="gap-action-text">${act}</div>
+      <button class="ai-plan-btn" data-id="${row.id}">${isExp?'Close':'AI Plan ↓'}</button>
+    </div>`;
+  }
+  const aiHTML=isExp?`<div class="ai-panel open">
+    <div class="ai-panel-label">AI Development Plan · ${row.skill}</div>
+    <div class="ai-panel-text">${aiLoading[row.id]?'Generating your personalised plan…':(aiText[row.id]||'')}</div>
+  </div>`:'';
+
+  return`<div class="row-wrap" data-id="${row.id}">
+    <div class="row-grid ${isExp?'expanded-bg':''}">
+      <div class="col-skill">
+        <select class="skill-sel ${row.skill?'has-value':''}" data-id="${row.id}">${skillOpts()}</select>
+        ${catName?`<div class="cat-label">${catName}</div>`:''}
+      </div>
+      <div class="col-cur">
+        <select class="cur-sel" data-id="${row.id}" style="color:${row.current?'#0f172a':'#94a3b8'};${row.current?'font-weight:600;':''}">${lvlOpts('— Where am I —')}</select>
+        ${row.current>0?`<div class="mini-bars">${miniBars(row.current,'#059669')}</div>`:''}
+      </div>
+      <div class="col-fut">
+        <select class="fut-sel" data-id="${row.id}" style="color:${row.future?'#0f172a':'#94a3b8'};${row.future?'font-weight:600;':''}">${lvlOpts('— Where I want to be —')}</select>
+        ${row.future>0?`<div class="mini-bars">${miniBars(row.future,'#2563eb')}</div>`:''}
+      </div>
+      <div class="col-gap">${gapHTML}</div>
+      <div class="del-col"><button class="del-btn" data-id="${row.id}">×</button></div>
+    </div>
+    ${aiHTML}
+  </div>`;
+}
+
+function renderRows(){
+  const c=document.getElementById('rows-container');
+  c.innerHTML=rows.map(renderRow).join('');
+  rows.forEach(r=>{
+    const ss=c.querySelector(`.skill-sel[data-id="${r.id}"]`);
+    const cs=c.querySelector(`.cur-sel[data-id="${r.id}"]`);
+    const fs=c.querySelector(`.fut-sel[data-id="${r.id}"]`);
+    if(ss)ss.value=r.skill;if(cs)cs.value=r.current;if(fs)fs.value=r.future;
+  });
+}
+
+function updateKPIs(){
+  const valid=rows.filter(r=>r.skill&&r.current>0&&r.future>0);
+  const k=document.getElementById('kpis');
+  if(!valid.length){k.innerHTML='';return;}
+  const tg=valid.reduce((s,r)=>s+Math.max(0,r.future-r.current),0);
+  const ac=(valid.reduce((s,r)=>s+r.current,0)/valid.length).toFixed(1);
+  const af=(valid.reduce((s,r)=>s+r.future,0)/valid.length).toFixed(1);
+  k.innerHTML=[{l:"Skills",v:valid.length},{l:"Avg Now",v:`${ac}/5`},{l:"Avg Goal",v:`${af}/5`},{l:"Gap",v:tg}]
+    .map(x=>`<div class="kpi"><div class="kpi-val">${x.v}</div><div class="kpi-label">${x.l}</div></div>`).join('');
+}
+
+function renderRadar(){
+  const valid=rows.filter(r=>r.skill&&r.current>0&&r.future>0);
+  const wrap=document.getElementById('radar-svg-wrap');
+  if(valid.length<3){wrap.innerHTML='<div id="radar-placeholder">Add at least 3 complete rows<br>to render the radar chart</div>';return;}
+  const n=valid.length,cx=200,cy=200,R=140;
+  const angle=i=>i*(2*Math.PI/n)-Math.PI/2;
+  const pt=(i,v)=>({x:cx+(v/5)*R*Math.cos(angle(i)),y:cy+(v/5)*R*Math.sin(angle(i))});
+  const poly=pts=>pts.map((p,i)=>`${i?'L':'M'}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join('')+'Z';
+  let svg=`<svg viewBox="0 0 400 400" style="width:100%;max-width:400px;">`;
+  [1,2,3,4,5].forEach(lv=>{
+    const pts=valid.map((_,i)=>{const p=pt(i,lv);return`${p.x.toFixed(1)},${p.y.toFixed(1)}`;}).join(' ');
+    svg+=`<polygon points="${pts}" fill="none" stroke="${lv===5?'#cbd5e1':'#e2e8f0'}" stroke-width="${lv===5?1.5:1}"/>`;
+  });
+  valid.forEach((_,i)=>{const o=pt(i,5);svg+=`<line x1="${cx}" y1="${cy}" x2="${o.x.toFixed(1)}" y2="${o.y.toFixed(1)}" stroke="#e2e8f0" stroke-width="1"/>`;});
+  svg+=`<path d="${poly(valid.map((_,i)=>pt(i,_.future)))}" fill="rgba(37,99,235,.08)" stroke="#2563eb" stroke-width="2" stroke-dasharray="5,4"/>`;
+  svg+=`<path d="${poly(valid.map((_,i)=>pt(i,_.current)))}" fill="rgba(5,150,105,.12)" stroke="#059669" stroke-width="2"/>`;
+  valid.forEach((_,i)=>{const p=pt(i,_.current);svg+=`<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="4" fill="#059669" stroke="#fff" stroke-width="1.5"/>`;});
+  valid.forEach((_,i)=>{const p=pt(i,_.future);svg+=`<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="4" fill="#2563eb" stroke="#fff" stroke-width="1.5"/>`;});
+  valid.forEach((s,i)=>{
+    const a=angle(i),lr=R+28,x=cx+lr*Math.cos(a),y=cy+lr*Math.sin(a);
+    const short=s.skill.length>15?s.skill.slice(0,14)+'…':s.skill;
+    svg+=`<text x="${x.toFixed(1)}" y="${y.toFixed(1)}" text-anchor="middle" dominant-baseline="middle" font-size="11" font-family="'Segoe UI',sans-serif" fill="#475569" font-weight="600">${short}</text>`;
+  });
+  svg+='</svg>';
+  wrap.innerHTML=svg;
+
+  const bl=document.getElementById('gap-bars-list');
+  const valid2=rows.filter(r=>r.skill&&r.current>0&&r.future>0);
+  if(!valid2.length){bl.innerHTML='<p style="font-size:12px;color:#94a3b8;">Complete rows to see bars.</p>';return;}
+  bl.innerHTML=valid2.map(r=>{const m=gapMeta(r.current,r.future);return`
+    <div class="gap-bar-row">
+      <div class="gap-bar-top"><span class="gap-bar-name">${r.skill}</span><span class="gap-bar-delta" style="color:${m.color};background:${m.badge};">Δ${m.gap}</span></div>
+      <div class="gap-bar-track"><div class="gap-bar-cur" style="width:${(r.current/5)*100}%;"></div><div class="gap-bar-gap" style="left:${(r.current/5)*100}%;width:${(m.gap/5)*100}%;background:${m.color};"></div></div>
+      <div class="gap-bar-labels"><span>${LEVELS[r.current]}</span><span>${LEVELS[r.future]}</span></div>
+    </div>`;}).join('');
+
+  const pw=document.getElementById('priority-card-wrap');
+  if(valid2.length){
+    const pri=[...valid2].sort((a,b)=>(b.future-b.current)-(a.future-a.current))[0];
+    pw.innerHTML=`<div class="card priority-card" style="padding:18px;"><div class="priority-label">Priority Area</div><div class="priority-skill">${pri.skill}</div><div class="priority-desc">Gap of <strong>${pri.future-pri.current}</strong> levels · Focus here first</div></div>`;
+  }else{pw.innerHTML='';}
+}
+
+function renderGaps(){
+  const valid=rows.filter(r=>r.skill&&r.current>0&&r.future>0);
+  const list=document.getElementById('gaps-list');
+  if(!valid.length){list.innerHTML=`<div class="card empty-state"><div class="empty-icon">📋</div><div class="empty-text">Complete skill rows in the Tracker tab to generate your report.</div></div>`;return;}
+  const sorted=[...valid].sort((a,b)=>(b.future-b.current)-(a.future-a.current));
+  list.innerHTML=sorted.map((row,idx)=>{
+    const m=gapMeta(row.current,row.future);
+    const acts=ACTIONS[Math.min(m.gap,4)];
+    return`<div class="card gap-item">
+      <div class="gap-item-head">
+        <div class="gap-rank">#${idx+1}</div>
+        <div>
+          <div class="gap-skill-name">${row.skill}</div>
+          <div class="gap-skill-cat">${row.category}</div>
+          <div class="gap-stats-row">
+            <div class="gap-stat"><div class="gap-stat-label">Now</div><div class="gap-stat-val" style="color:#059669;">${row.current}</div><div class="gap-stat-sub">${LEVELS[row.current]}</div></div>
+            <div class="gap-stat"><div class="gap-stat-label">Goal</div><div class="gap-stat-val" style="color:#2563eb;">${row.future}</div><div class="gap-stat-sub">${LEVELS[row.future]}</div></div>
+            <div class="gap-stat"><div class="gap-stat-label">Gap</div><div class="gap-stat-val" style="color:${m.color};">${m.gap}</div><div class="gap-stat-sub" style="color:${m.color};font-weight:600;">${m.label}</div></div>
+          </div>
+        </div>
+        <span class="badge gap-item-badge" style="background:${m.badge};color:${m.color};border:1px solid ${m.border};padding:4px 10px;">${m.label}</span>
+      </div>
+      <div class="gap-progress-wrap"><div class="gap-progress-track"><div class="gap-progress-fill" style="width:${(row.current/5)*100}%;background:linear-gradient(90deg,#059669,${m.color});"></div></div></div>
+      <div class="gap-actions-wrap">${acts.map((a,i)=>`<div class="gap-action-item"><span class="gap-action-num" style="color:${m.color};">${i+1}.</span>${a}</div>`).join('')}</div>
+    </div>`;
+  }).join('');
+}
+
+function render(){renderRows();updateKPIs();if(currentTab==='radar')renderRadar();if(currentTab==='gaps')renderGaps();}
+
+document.querySelectorAll('.tab-btn').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    currentTab=btn.dataset.tab;
+    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('tab-tracker').style.display=currentTab==='tracker'?'':'none';
+    document.getElementById('tab-radar').style.display=currentTab==='radar'?'':'none';
+    document.getElementById('tab-gaps').style.display=currentTab==='gaps'?'':'none';
+    if(currentTab==='radar')renderRadar();
+    if(currentTab==='gaps')renderGaps();
+  });
+});
+
+document.getElementById('add-btn').addEventListener('click',()=>{rows.push(makeRow());render();});
+
+document.getElementById('rows-container').addEventListener('change',e=>{
+  const id=e.target.dataset.id;if(!id)return;
+  const row=rows.find(r=>r.id===id);if(!row)return;
+  if(e.target.classList.contains('skill-sel')){
+    row.skill=e.target.value;
+    const f=Object.entries(SKILL_CATEGORIES).find(([,s])=>s.includes(row.skill));
+    row.category=f?f[0]:'';
+  }
+  if(e.target.classList.contains('cur-sel'))row.current=+e.target.value;
+  if(e.target.classList.contains('fut-sel'))row.future=+e.target.value;
+  render();
+});
+
+document.getElementById('rows-container').addEventListener('click',async e=>{
+  if(e.target.classList.contains('del-btn')){
+    const id=e.target.dataset.id;rows=rows.filter(r=>r.id!==id);
+    if(expandedId===id)expandedId=null;render();return;
+  }
+  if(e.target.classList.contains('ai-plan-btn')){
+    const id=e.target.dataset.id;const row=rows.find(r=>r.id===id);if(!row)return;
+    if(expandedId===id){expandedId=null;render();return;}
+    expandedId=id;render();
+    if(aiText[id])return;
+    aiLoading[id]=true;render();
+    try{
+      const res=await fetch("https://api.anthropic.com/v1/messages",{
+        method:"POST",headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:1000,
+          messages:[{role:"user",content:`You are a senior talent development consultant. A professional wants to bridge their "${row.skill}" skill gap.\nCurrent: ${LEVELS[row.current]} (${row.current}/5) → Target: ${LEVELS[row.future]} (${row.future}/5). Gap: ${row.future-row.current} levels.\nProvide a concise, executive-quality development plan:\n1. Top 2 recommended courses/certifications (include platform)\n2. 30/60/90-day milestones\n3. One essential book or resource\n4. One practical project to accelerate growth\nMax 180 words. Use bullet points. Be specific and actionable.`}]})
+      });
+      const d=await res.json();aiText[id]=d.content?.map(c=>c.text||'').join('')||'No response.';
+    }catch{aiText[id]='Unable to load AI recommendation.';}
+    aiLoading[id]=false;render();
+  }
+});
+
+render();
+</script>
+</body>
+</html>
